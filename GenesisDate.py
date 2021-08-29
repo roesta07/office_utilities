@@ -4,7 +4,7 @@ import numpy as np
 from datetime import datetime, timedelta
 import datetime
 from bikram import samwat
-from openpyxl.utils.cell import get_column_letter
+
 
 class GenesisDate:
     """
