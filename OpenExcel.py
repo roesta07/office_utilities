@@ -5,7 +5,6 @@ import os
 import re
 from itertools import chain
 from openpyxl.utils.cell import get_column_letter
-
 class OpenExcel:
     """
     input: Excel filepath with table name
@@ -25,6 +24,9 @@ class OpenExcel:
                 for tbl_name,ref in ws.tables.items():
                     self.mapping[self.wb][tbl_name]=[ws,ref]
 
+    def return_table_names(self):
+        return self.mapping[self.wb].keys()
+        
     def filter_files(self,name):
         filter_excel=(name.endswith('.xlsx')) & (not name.startswith('~')) ##filter file name and temp
         filter_conflict=not bool(re.search('conflict',name))
@@ -40,7 +42,22 @@ class OpenExcel:
         except:
             print('No table with that Name found')
       
-    def from_table(self,table_name): 
+    def from_table(self,table_name):
+        if table_name=='all':
+            table_names=self.return_table_names()
+            dfs=[]
+            for table in table_names:
+                data=self.get_table_data(self.wb,table)
+                content=[[cell.value for cell in ent] for ent in data] ## value for each table cells; list compression method
+                header=content[0] ## first row as header
+                rest=content[1:] ## rest rows as content
+                df=pd.DataFrame(rest,columns=header) ## converting into dataframe
+                dfs.append(df)
+            dataframe=pd.concat(dfs)
+            print(dataframe.columns.sort_values())
+            return pd.concat(dfs)
+                
+
         data=self.get_table_data(self.wb,table_name)
         content=[[cell.value for cell in ent] for ent in data] ## value for each table cells; list compression method
         header=content[0] ## first row as header
@@ -73,6 +90,6 @@ class OpenExcel:
             dfs.append(df)
             dataframe=pd.concat(dfs)
         return dataframe
-        
+    
 # df=OpenExcel(filename='party_ledger_v1.1.xlsx').from_table('ledger_data')
 # files=OpenExcel().from_folder(ROOT_DIR,'VatBills_Sales')
